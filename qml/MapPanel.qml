@@ -51,6 +51,10 @@ Rectangle {
             return height - ((lat - minLat) / (maxLat - minLat) * height * 0.86 + height * 0.07)
         }
 
+        Component.onCompleted: Qt.callLater(requestPaint)
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+
         Connections {
             target: Drone
             function onTelemetryChanged() { mapCanvas.requestPaint() }
