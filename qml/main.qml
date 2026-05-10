@@ -130,7 +130,7 @@ ApplicationWindow {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Click anywhere to dismiss"
-                color: "rgba(255,255,255,0.6)"
+                color: "#99ffffff"
                 font.pixelSize: 13; font.family: "Courier New"
             }
         }
