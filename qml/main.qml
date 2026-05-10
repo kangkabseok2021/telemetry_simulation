@@ -13,13 +13,14 @@ ApplicationWindow {
     title: "UAV Telemetry & Simulation Control Station"
     color: "#080d14"
 
-    ColumnLayout {
+    // ── Root container using anchors (avoids ColumnLayout implicit-size issue) ──
+    Item {
         anchors.fill: parent
-        spacing: 0
 
         // ── Status bar ─────────────────────────────────────
         Rectangle {
-            Layout.fillWidth: true
+            id: statusBar
+            anchors { top: parent.top; left: parent.left; right: parent.right }
             height: 32; color: "#0b1520"
 
             RowLayout {
@@ -55,19 +56,39 @@ ApplicationWindow {
             }
         }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#1a3050" }
+        Rectangle {
+            id: topSep
+            anchors { top: statusBar.bottom; left: parent.left; right: parent.right }
+            height: 1; color: "#1a3050"
+        }
+
+        // ── Control bar (anchor to bottom first so main area fills the rest) ──
+        ControlBar {
+            id: controlBar
+            anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+        }
+
+        Rectangle {
+            id: bottomSep
+            anchors { bottom: controlBar.top; left: parent.left; right: parent.right }
+            height: 1; color: "#1a3050"
+        }
 
         // ── Main 3-column area ─────────────────────────────
         RowLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.margins: 8
+            id: mainRow
+            anchors {
+                top: topSep.bottom; bottom: bottomSep.top
+                left: parent.left; right: parent.right
+                margins: 8
+            }
             spacing: 8
 
             // Left column: attitude dials
             ColumnLayout {
                 spacing: 8
                 Layout.preferredWidth: 140
+                Layout.maximumWidth: 140
                 Layout.fillHeight: true
 
                 Text {
@@ -98,14 +119,10 @@ ApplicationWindow {
             // Right: telemetry readout
             TelemetryReadout {
                 Layout.preferredWidth: 185
+                Layout.maximumWidth: 185
                 Layout.fillHeight: true
             }
         }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#1a3050" }
-
-        // ── Control bar ─────────────────────────────────────
-        ControlBar { Layout.fillWidth: true }
     }
 
     // ── Emergency overlay ───────────────────────────────────

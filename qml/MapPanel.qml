@@ -51,9 +51,10 @@ Rectangle {
             return height - ((lat - minLat) / (maxLat - minLat) * height * 0.86 + height * 0.07)
         }
 
-        Component.onCompleted: Qt.callLater(requestPaint)
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
+        onWidthChanged:  { if (width > 0 && height > 0) requestPaint() }
+        onHeightChanged: { if (width > 0 && height > 0) requestPaint() }
+
+        Timer { interval: 200; running: true; onTriggered: mapCanvas.requestPaint() }
 
         Connections {
             target: Drone
@@ -61,6 +62,7 @@ Rectangle {
         }
 
         onPaint: {
+            if (width <= 0 || height <= 0) return
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
 
