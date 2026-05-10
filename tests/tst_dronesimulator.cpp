@@ -1,5 +1,6 @@
 #include <QtTest>
 #include "waypointmanager.h"
+#include "dronesimulator.h"
 
 class TestWaypointManager : public QObject {
     Q_OBJECT
@@ -95,5 +96,69 @@ void TestWaypointManager::testYawHeadingWrap() {
     QVERIFY(d.yaw < 45.0 || d.yaw > 315.0);
 }
 
-QTEST_MAIN(TestWaypointManager)
+class TestDroneSimulator : public QObject {
+    Q_OBJECT
+
+private slots:
+    void testStartSetsIsRunning();
+    void testStopClearsIsRunning();
+    void testEmergencyStopsAndSignals();
+    void testTelemetryChangedEmittedOnTick();
+};
+
+void TestDroneSimulator::testStartSetsIsRunning() {
+    DroneSimulator sim;
+    QVERIFY(!sim.isRunning());
+    sim.start();
+    QVERIFY(sim.isRunning());
+    sim.stop();
+}
+
+void TestDroneSimulator::testStopClearsIsRunning() {
+    DroneSimulator sim;
+    sim.start();
+    QVERIFY(sim.isRunning());
+    sim.stop();
+    QVERIFY(!sim.isRunning());
+}
+
+void TestDroneSimulator::testEmergencyStopsAndSignals() {
+    DroneSimulator sim;
+    sim.start();
+    QVERIFY(sim.isRunning());
+
+    QSignalSpy emergencySpy(&sim, &DroneSimulator::emergencyTriggered);
+    QSignalSpy runningSpy(&sim, &DroneSimulator::isRunningChanged);
+
+    sim.triggerEmergency();
+
+    QVERIFY(!sim.isRunning());
+    QCOMPARE(emergencySpy.count(), 1);
+    QVERIFY(runningSpy.count() >= 1);
+    QCOMPARE(sim.speed(), 0.0);
+}
+
+void TestDroneSimulator::testTelemetryChangedEmittedOnTick() {
+    DroneSimulator sim;
+    QSignalSpy spy(&sim, &DroneSimulator::telemetryChanged);
+
+    sim.start();
+    // Wait up to 200ms for at least 2 ticks (timer fires every 50ms)
+    QTRY_VERIFY_WITH_TIMEOUT(spy.count() >= 2, 200);
+    sim.stop();
+}
+
+int main(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+    int status = 0;
+    {
+        TestWaypointManager t;
+        status |= QTest::qExec(&t, argc, argv);
+    }
+    {
+        TestDroneSimulator t;
+        status |= QTest::qExec(&t, argc, argv);
+    }
+    return status;
+}
 #include "tst_dronesimulator.moc"
