@@ -40,14 +40,16 @@ TelemetryData WaypointManager::interpolate(double elapsedMs) const {
     data.longitude = from.longitude + segT * (to.longitude - from.longitude);
     data.altitude  = from.altitude  + segT * (to.altitude  - from.altitude);
     data.speed     = from.speed     + segT * (to.speed     - from.speed);
-    data.yaw       = from.heading   + segT * (to.heading   - from.heading);
-
     // Pitch derived from altitude change across the segment (+ve = climbing)
     double altDelta = to.altitude - from.altitude;
     data.pitch = std::clamp(altDelta / 50.0 * 10.0, -20.0, 20.0);
 
     // Roll derived from heading change (+ve heading change = right turn = positive roll)
+    // Normalize to shortest arc (-180, +180] to avoid wrapping through south
     double headDelta = to.heading - from.heading;
+    if (headDelta >  180.0) headDelta -= 360.0;
+    if (headDelta < -180.0) headDelta += 360.0;
+    data.yaw  = from.heading + segT * headDelta;
     data.roll = std::clamp(headDelta / 45.0 * 15.0, -30.0, 30.0);
 
     // Battery: 1% drain per 1000ms, floor at 0

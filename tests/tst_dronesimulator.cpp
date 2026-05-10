@@ -11,6 +11,8 @@ private slots:
     void testBatteryDrain();
     void testBatteryNeverExceedsBounds();
     void testTelemetryBounds();
+    void testYawMidSegment();
+    void testYawHeadingWrap();
 };
 
 void TestWaypointManager::testInterpolationAtStart() {
@@ -66,14 +68,31 @@ void TestWaypointManager::testTelemetryBounds() {
     for (int i = 0; i <= 100; ++i) {
         double t = (mgr.totalDuration() * i) / 100.0;
         TelemetryData d = mgr.interpolate(t);
-        QVERIFY(d.altitude >= 49.0);   // min waypoint alt = 50
-        QVERIFY(d.altitude <= 181.0);  // max waypoint alt = 180
-        QVERIFY(d.speed >= 29.0);      // min waypoint speed = 30
-        QVERIFY(d.speed <= 61.0);      // max waypoint speed = 60
+        QVERIFY(d.altitude >= 49.999);   // min waypoint alt = 50
+        QVERIFY(d.altitude <= 180.001);  // max waypoint alt = 180
+        QVERIFY(d.speed >= 29.999);      // min waypoint speed = 30
+        QVERIFY(d.speed <= 60.001);      // max waypoint speed = 60
         QVERIFY(d.pitch >= -30.0 && d.pitch <= 30.0);
         QVERIFY(d.roll  >= -30.0 && d.roll  <= 30.0);
         QVERIFY(d.battery >= 0.0 && d.battery <= 100.0);
     }
+}
+
+void TestWaypointManager::testYawMidSegment() {
+    WaypointManager mgr;
+    // Segment 0→1: heading 45° → 30°, midpoint at t=3000ms
+    TelemetryData d = mgr.interpolate(3000.0);
+    QVERIFY(qAbs(d.yaw - 37.5) < 1e-6);
+}
+
+void TestWaypointManager::testYawHeadingWrap() {
+    WaypointManager mgr;
+    // Segment 2→3: heading 10° → 350°, shortest arc is -20° (left turn near north)
+    // Midpoint at t=15000ms → expected yaw ≈ 0° (or 360°, which after normalization is ~0)
+    // After fix: yaw should be near north (~0°), NOT near south (~180°)
+    TelemetryData d = mgr.interpolate(15000.0);
+    // yaw should be in the north quadrant, not the south quadrant
+    QVERIFY(d.yaw < 45.0 || d.yaw > 315.0);
 }
 
 QTEST_MAIN(TestWaypointManager)
