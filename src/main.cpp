@@ -6,10 +6,8 @@
 int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
 
-    qmlRegisterSingletonType<DroneSimulator>("UAV", 1, 0, "Drone",
-        [](QQmlEngine *, QJSEngine *) -> QObject * {
-            return new DroneSimulator();
-        });
+    auto *drone = new DroneSimulator(&app);
+    qmlRegisterSingletonInstance<DroneSimulator>("UAV", 1, 0, "Drone", drone);
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/UAV/qml/main.qml"));

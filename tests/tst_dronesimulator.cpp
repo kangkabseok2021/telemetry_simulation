@@ -94,6 +94,13 @@ void TestWaypointManager::testYawHeadingWrap() {
     TelemetryData d = mgr.interpolate(15000.0);
     // yaw should be in the north quadrant, not the south quadrant
     QVERIFY(d.yaw < 45.0 || d.yaw > 315.0);
+
+    // At t=18000ms (end of seg 2→3): heading goes from 10° to 350°, shortest arc = -20°
+    // result should be 350° (normalized), NOT -10°
+    TelemetryData dEnd = mgr.interpolate(18000.0);
+    QVERIFY(dEnd.yaw >= 0.0);   // must never be negative
+    QVERIFY(dEnd.yaw < 360.0);  // must be in [0, 360)
+    QVERIFY(qAbs(dEnd.yaw - 350.0) < 1e-6);  // should be exactly 350°
 }
 
 class TestDroneSimulator : public QObject {

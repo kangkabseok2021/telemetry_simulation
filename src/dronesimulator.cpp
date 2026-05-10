@@ -53,6 +53,8 @@ void DroneSimulator::onTick() {
     point[QStringLiteral("lat")] = m_current.latitude;
     point[QStringLiteral("lon")] = m_current.longitude;
     m_breadcrumbs.append(point);
+    if (m_breadcrumbs.size() > 500)
+        m_breadcrumbs.removeFirst();
 
     emit telemetryChanged();
 }

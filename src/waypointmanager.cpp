@@ -49,7 +49,8 @@ TelemetryData WaypointManager::interpolate(double elapsedMs) const {
     double headDelta = to.heading - from.heading;
     if (headDelta >  180.0) headDelta -= 360.0;
     if (headDelta < -180.0) headDelta += 360.0;
-    data.yaw  = from.heading + segT * headDelta;
+    double rawYaw = from.heading + segT * headDelta;
+    data.yaw  = std::fmod(rawYaw + 360.0, 360.0);
     data.roll = std::clamp(headDelta / 45.0 * 15.0, -30.0, 30.0);
 
     // Battery: 1% drain per 1000ms, floor at 0
