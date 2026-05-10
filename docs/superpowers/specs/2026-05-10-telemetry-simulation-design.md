@@ -131,7 +131,10 @@ private:
 
 **Registration in `main.cpp`:**
 ```cpp
-qmlRegisterSingletonType<DroneSimulator>("UAV", 1, 0, "Drone", ...);
+qmlRegisterSingletonType<DroneSimulator>("UAV", 1, 0, "Drone",
+    [](QQmlEngine *, QJSEngine *) -> QObject * {
+        return new DroneSimulator();
+    });
 ```
 
 ---
